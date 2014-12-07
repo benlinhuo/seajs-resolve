@@ -412,7 +412,7 @@ Module.prototype.onload = function() {
 
 说明：在执行mod.callback时候，先var uris = mod.resolve();获取匿名模块的依赖，然后执行依赖项的exec函数。等执行完所有的依赖项（执行main.js模块的exec时候，会去执行spinning的exec，再按照之前的顺着来的顺序执行exec）都执行完毕以后，会去执行当初使用use时候，指定的callback.
 
-11. Module.prototype.exec: 用于模块的执行
+* 11. Module.prototype.exec: 用于模块的执行
 ```javascript
 Module.prototype.exec = function() {
     // 当前模块
