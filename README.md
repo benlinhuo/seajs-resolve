@@ -1,5 +1,6 @@
 ####概述
 1. 我们的seajs-resolve仓库中，解析的seajs版本是2.3.0(不过我们解析的hello.html中引用的版本是2.2.0)，我们讲解的源码还是以2.2.0为主，2.3.0与2.2.0在config.js中稍有些区别，其他没对比。在sea-2.3.0文件夹中，对应文件夹目录解析如下：
+```html
 sea-2.3.0
   |- examples  --使用seajs的几个常用例子
      |- app  --html文件夹（包括四个例子：hello.html等，因为我们一会儿讲解seajs源码的一个流程就是hello这个小seajs）
@@ -17,9 +18,11 @@ sea-2.3.0
      |- src  --seajs最初始的源码
      |- test  --测试集
      |- Makefile  --可执行构建、测试等命令 
+```
 
 2. 对于上述的目录结构，我们解析seajs源码，需要用到seajs-2.3.0/src以及一个案例代码hello
 对于seajs-2.3.0/src目录结构如下：
+```html
 .../src
       |- intro.js
       |- sea.js
@@ -31,7 +34,7 @@ sea-2.3.0
       |- module.js
       |- config.js
       |- outro.js
-
+```
 以上src中的所有文件，组合以后就变成了seajs-2.3.0/dist/sea-debug.js文件。
 intro.js和outro.js相当于是整个源码的一个包装器（Wrapper），如下：
 ```javascript
