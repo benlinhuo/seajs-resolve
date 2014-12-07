@@ -96,13 +96,19 @@ var exports = isFunction(factory) ?
 
 答：因为我们在exec函数中可以看到，在执行factory时factory(require, mod.exports = {}, mod).即把mod.exports作为define(require, exports, module)中的exports。所以我们说exports时module.exports的一个引用。
 ```javascript
+function require(id) {
+  return Module.get(require.resolve(id)).exec()
+}
+
 var exports = isFunction(factory) ?
       factory(require, mod.exports = {}, mod) :
       factory
 
-  if (exports === undefined) {
-    exports = mod.exports
-  }
+if (exports === undefined) {
+  exports = mod.exports
+}
+
+return  exports;
 ```
 
 看以上代码可知，当我们如果factory有return的时候，它的优先级是最高的。其次我们是把mod.exports赋值给exports，也就是说module.exports的优先级高于exports.
@@ -129,6 +135,8 @@ define({
 });
 ```
 原因：因为我们上面定义exports的时候，有判断factory不是Function时候，就直接exports ＝ factory.
+
+说明三：我们通过exports来暴露接口。这就意味着完全不需要命名空间，更不需要全局变量。这是一种彻底的命名冲突解决方案。原因如上代码：它会将返回的执行结果factory(...)赋值给exports.如果这样拿到的为undefined,则会默认是通过module.exports赋值给exports，最后exec返回exports.我们看require函数，它return 的就是exec的结果。所以我们使用var xxx＝require('xxx')；就可以将执行exec得到的exports结果赋值给xxx了。
 
 ####总结五：
 hello.html案例执行的简单流程如下：
@@ -239,10 +247,60 @@ anonymousMeta = meta
 
 12. 执行完jquery的define之后，执行onRequest这个函数，该函数最后会有jquery模块的load函数。接着执行jquery的load函数。
 此时因为jquery没有依赖项，即mod._remain == 0。如下代码，会去执行jquery的onload函数。则彼此依赖的关系告一段落。
+```javascript
 if (mod._remain === 0) {
     mod.onload()
     return
   }
-
+```
 
 13. 接下来就是各个模块会使用与之前相反顺序（A依赖于B，B依赖于C；相反顺序指：C－>B->A）去执行各自对应的onload函数（该函数是用于执行callback）
+
+
+####总结六
+描述：有时候我们是希望使用require来进行条件加载，如下：
+```javascript
+if (todayIsWeekend) {
+    require('play');
+} else {
+    require('work');
+}
+```
+从我们静态分析的角度来看，这个模块是不会区分条件的，会认为当前模块依赖于play和work这两个模块（因为在分析当前模块的依赖模块时候，是通过正则表达式去匹配的，只匹配到了require,所以这两个都会被当成依赖模块而被被请求执行。这么说，更重要的点是require是个关键字，也不能被用作其他用途，否则会被当作依赖模块来处理）。
+
+这样的情况，我们可以通过require.async来进行条件加载，因为它不是简单的通过require关键字去匹配得到依赖模块的。看require.async的源码可知，它是通过Module.use去加载的（会生成mod.callback）。它异步的原因是，使用use，我们就只能通过传入callback来执行模块加载完毕以后的操作了。而不能直接通过return 一个结果的形式，进行后续操作。
+```javascript
+require.async = function(ids, callback) {
+    Module.use(ids, callback, uri + "_async_" + cid())
+    return require
+}
+```
+
+对于有多个Module.use的情况，我们可以这么理解：有多个入口文件，它们之间就只是在加载某些公用模块的时候，有些可能已经被加载过了。如果被加载过了，更好，就不用自己再加载一次了。各自完了之后，回到自己最初出发的地方，进行后面操作即可。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

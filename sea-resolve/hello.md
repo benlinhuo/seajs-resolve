@@ -1,4 +1,4 @@
-####hello
+####hello 案例解析
 hello.html中对seajs(我们直接查看sea-debug.js即可，合并后的)使用的代码
 ```javascript
 <script src="../sea-modules/seajs/seajs/2.2.0/sea-debug.js"></script>
