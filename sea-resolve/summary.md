@@ -88,7 +88,6 @@ var exports = isFunction(factory) ?
 问题: 多个模块引用同一个模块，如何保证它不被请求多次（不被重复操作）？
 
 答：
-
 * 1. 其实对于一个模块，我们都给予它多个状态（mod.status:FETCHING,SAVED...），在判断依赖模块是否需要请求或load时，可以通过这些状态去判断，模块现在已经是个啥状态了。如当前判断它是否已经FETCHING过了，如果是则不需要再fetch一次就可以直接进入下一个阶段。即在不同的处理阶段，会去判断它所需要的状态，如果已经完成的话，不需要当前处理就可以直接跳到下一个状态。
 
 * 2. 也因为我们给了每个模块一个生命周期，这样在因为依赖加载模块时就不会乱。
@@ -147,27 +146,27 @@ hello.html案例执行的简单流程如下：
 最开始加载好seajs，之后执行seajs.use("examples/hello/1.0.0/main");。
 由源码可以看到
 
-* 1. var mod = Module.get(uri, isArray(ids) ? ids : [ids]);获取当前的use本身匿名模块。
+1. var mod = Module.get(uri, isArray(ids) ? ids : [ids]);获取当前的use本身匿名模块。
 
-* 2. 因为该本身匿名模块是不需要fetch的，所以直接load
+2. 因为该本身匿名模块是不需要fetch的，所以直接load。
 
-* 3. 在load过程中，其实是加载该匿名模块的依赖模块（即main.js）。
+3. 在load过程中，其实是加载该匿名模块的依赖模块（即main.js）。
 
-* 4. fetch main.js（fetch的原理是：创建script标签，设置node的onload，onload中会去加载onRequest这个callback）。
+4. fetch main.js（fetch的原理是：创建script标签，设置node的onload，onload中会去加载onRequest这个callback）。
     其实需要注意到的是：在请求未返回之前还是会去执行刚开始未执行结束的js代码。就暂时不会立即执行onRequest这个函数。
     即使请求回来了，会接着执行之前的js代码。所以会完成use这个过程。
 
-* 5. use结束后，会先去执行返回回来的js代码，即define整体，之后才会执行onRequest.
+5. use结束后，会先去执行返回回来的js代码，即define整体，之后才会执行onRequest。
  
-* 6. 在define中，
+6. 在define中，
 ```javascript
 if (!isArray(deps) && isFunction(factory)) {
     deps = parseDependencies(factory.toString())
   }
 ```
-  如上，即当deps非array或者未undefined时，都会通过factory函数体（factory.toString()）去解析(通过正则匹配)得到它的依赖
+如上，即当deps非array或者未undefined时，都会通过factory函数体（factory.toString()）去解析(通过正则匹配)得到它的依赖。
 
-* 7. Module.define执行结束以后，会去执行onload指定的函数onRequest。
+7. Module.define执行结束以后，会去执行onload指定的函数onRequest。
 在执行onRequest函数中，有
 ```javascript
 if (anonymousMeta) {
@@ -192,10 +191,10 @@ mod.status = STATUS.SAVED;
 ```
 到以上，针对main.js，完成了FETCHING和SAVED这两个状态。
 
-* 8. 在onRequest函数中，最后会去m.load()，即执行main.js这个模块的load函数。即是加载main.js这个模块的依赖。
+8. 在onRequest函数中，最后会去m.load()，即执行main.js这个模块的load函数。即是加载main.js这个模块的依赖。
 在该过程中发现，还需要加载依赖模块spinning.js模块，则这个时候会去fetch该模块。
 
-* 9. fetch spinning.js这个模块，同fetch main.js这个模块过程。
+9. fetch spinning.js这个模块，同fetch main.js这个模块过程。
 fetch中代码：
 ```javascript
 if (!emitData.requested) {
@@ -236,20 +235,20 @@ if (!emitData.requested) {
 注意的点（比较容易迷惑）：执行过程中经常会有module1的A函数调用跳转到module1的B函数调用，module1的B函数又会调用module2的A函数，...。
 之后调用结束又会回到module1的A函数，所以这样的一个逻辑还是比较绕的。需要注意，当前的这个module到底是谁。
 
-* 10. 在执行完main.js的load函数（调用结束后会回去，具体见9的“注意的点”）以后，会去执行新请求回来的spinning.js这个文件，即Module.define。
+10. 在执行完main.js的load函数（调用结束后会回去，具体见9的“注意的点”）以后，会去执行新请求回来的spinning.js这个文件，即Module.define。
 这时候又会发现它依赖于jquery（即define中，mod.dependencies = ["jquery"]）。它也是通过anonymousMeta这个方式去save（在onRequest函数中，
 将spinning这个模块状态变成了SAVED）。
 在执行完define以后，就会去执行onRequest这个函数。
 
-* 11. 执行onRequest函数中，while ((m = mods.shift())) m.load()。会去执行spinning这个模块的load函数，加载spinning的依赖jquery。
+11. 执行onRequest函数中，while ((m = mods.shift())) m.load()。会去执行spinning这个模块的load函数，加载spinning的依赖jquery。
 在jquery中，我们知道它不再有依赖模块了。jquery会先fetch，然后执行下载下来的jquery代码（define模式）。此时执行Module.define中，
 meta.uri ? Module.save(meta.uri, meta)Module.save(meta.uri, meta)。meta.uri = "file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/sea-modules/jquery/jquery/1.10.1/jquery.js"
  :
 // Save information for "saving" work in the script onload event
 anonymousMeta = meta
-它跟之前模块不一样，它是此处直接执行Module.save(meta.uri, meta)。meta.uri = "file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/sea-modules/jquery/jquery/1.10.1/jquery.js"
+它跟之前模块不一样，它是此处直接执行Module.save(meta.uri, meta)。meta.uri = "file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/sea-modules/jquery/jquery/1.10.1/jquery.js"。
 
-* 12. 执行完jquery的define之后，执行onRequest这个函数，该函数最后会有jquery模块的load函数。接着执行jquery的load函数。
+12. 执行完jquery的define之后，执行onRequest这个函数，该函数最后会有jquery模块的load函数。接着执行jquery的load函数。
 此时因为jquery没有依赖项，即mod._remain == 0。如下代码，会去执行jquery的onload函数。则彼此依赖的关系告一段落。
 ```javascript
 if (mod._remain === 0) {
@@ -257,8 +256,9 @@ if (mod._remain === 0) {
     return
   }
 ```
+继续。
 
-* 13. 接下来就是各个模块会使用与之前相反顺序（A依赖于B，B依赖于C；相反顺序指：C－>B->A）去执行各自对应的onload函数（该函数是用于执行callback）
+13. 接下来就是各个模块会使用与之前相反顺序（A依赖于B，B依赖于C；相反顺序指：C－>B->A）去执行各自对应的onload函数（该函数是用于执行callback）。
 
 
 ####总结六
