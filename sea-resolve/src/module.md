@@ -1,7 +1,7 @@
 ####module.js 模块加载器的核心代码
 我们从hello.html这个案例加载模块的顺序来解读
 
-1. 全局，尤其是状态（很重要，我们的模块执行流程就是按照这个来的）
+* 1. 全局，尤其是状态（很重要，我们的模块执行流程就是按照这个来的）
 ```javascript
 // 设置全局对象seajs的cache属性为空对象。并赋予变量cachedMods，表示缓
 // 存的模块。
@@ -32,7 +32,7 @@ var STATUS = Module.STATUS = {
 ```
 
 
-2. seajs.use：对外的接口。全局对象的use函数，用于加载所有的依赖IDs。参数一为所有依赖，参数二为回调函数。此处的callback是所有模块都加载完毕，且执行完毕以后，最后才执行的。由以下代码看到，接下来需要解析的是Module.preload()函数
+* 2. seajs.use：对外的接口。全局对象的use函数，用于加载所有的依赖IDs。参数一为所有依赖，参数二为回调函数。此处的callback是所有模块都加载完毕，且执行完毕以后，最后才执行的。由以下代码看到，接下来需要解析的是Module.preload()函数
 ```javascript
 seajs.use = function(ids, callback) {
     // 加载上所有的预加载模块。
@@ -45,7 +45,7 @@ seajs.use = function(ids, callback) {
 }
 ```
 
-3. Module.preload：用于加载其他模块之前先加载“预加载模块”。在不考虑有预加载的模块情况下，我们直接执行了callback,即：Module.use(ids, callback, data.cwd + "_use_" + cid())。
+* 3. Module.preload：用于加载其他模块之前先加载“预加载模块”。在不考虑有预加载的模块情况下，我们直接执行了callback,即：Module.use(ids, callback, data.cwd + "_use_" + cid())。
 ```javascript
 Module.preload = function(callback) {
     // 从全局定义中拿到需要预加载的模块。此处预加载的模块就是seajs自执行时候解析的插件
@@ -69,7 +69,7 @@ Module.preload = function(callback) {
 }
 ```
 
-4. Module.use(ids, callback, data.cwd + "_use_" + cid()):用于加载匿名模块（该匿名模块的URI是我们自己自动生成的,举例可以说是："file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/app/_use_0"）。参数一：依赖的模块，参数二：回调函数callback，参数三：模块的URI
+* 4. Module.use(ids, callback, data.cwd + "_use_" + cid()):用于加载匿名模块（该匿名模块的URI是我们自己自动生成的,举例可以说是："file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/app/_use_0"）。参数一：依赖的模块，参数二：回调函数callback，参数三：模块的URI
 ```javascript
 Module.use = function(ids, callback, uri) {
     // 首先获取模块
@@ -96,7 +96,7 @@ Module.use = function(ids, callback, uri) {
 }
 ```
 
-5. Module.get(uri, isArray(ids) ? ids : [ids]):用于已有模块的获取或者新模块的创建,所以我们不用担心在获取的时候该模块不存在而造成错误。
+* 5. Module.get(uri, isArray(ids) ? ids : [ids]):用于已有模块的获取或者新模块的创建,所以我们不用担心在获取的时候该模块不存在而造成错误。
 ```javascript
 Module.get = function(uri, deps) {
     // 用URI从缓存中取出模块，若无，使用URI和依赖新建一个模块。
@@ -104,7 +104,7 @@ Module.get = function(uri, deps) {
 }
 ```
 
-6. 以上4代码中第二＊号代表的代码：mod.load。因为这是个匿名模块，其实是没有fetch这个过程的，所以就直接load的了。
+* 6. 以上4代码中第二＊号代表的代码：mod.load。因为这是个匿名模块，其实是没有fetch这个过程的，所以就直接load的了。
 
 该方法load，是用于加载模块的所有依赖，然后在完成后触发onload事件句柄。
 ```javascript
@@ -186,7 +186,7 @@ Module.prototype.load = function() {
 }
 ```
 
-7. 由上：并行加载依赖模块（["file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/static/hello/src/main.js"]，注意当前的模块还是自动生成URI的匿名模块）的代码，下面我们开始解析fetch。
+* 7. 由上：并行加载依赖模块（["file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/static/hello/src/main.js"]，注意当前的模块还是自动生成URI的匿名模块）的代码，下面我们开始解析fetch。
 
 
 ```javascript
@@ -270,7 +270,7 @@ requestCache变量是上述函数参数，调用方是6的onload中var requestCa
 
 五。上述define执行完毕以后，就会执行onload函数，即会执行onRequest。具体见下面详细分析
 
-8. Module.define: 用于模块的定义
+* 8. Module.define: 用于模块的定义
 ```javascript
 Module.define = function(id, deps, factory) {
     // 参数的个数
@@ -326,7 +326,7 @@ Module.define = function(id, deps, factory) {
 
 说明二：meta.uri ? Module.save(meta.uri, meta) : anonymousMeta = meta。如果meta.uri存在，则立即Module.save，否则就设置anonymousMeta，让其到onRequest函数中save。
 
-9. onRequest函数
+* 9. onRequest函数
 ```javascript
 // 定义请求的回调函数。
     function onRequest() {
@@ -357,7 +357,7 @@ if (mod._remain === 0) {
 }
 ```
 
-10. Module.prototype.onload:模块加载完成后调用的方法（终于有jquery这个模块执行onload函数了）
+* 10. Module.prototype.onload:模块加载完成后调用的方法（终于有jquery这个模块执行onload函数了）
 ```javascript
 Module.prototype.onload = function() {
     // 当前模块
