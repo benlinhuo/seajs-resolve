@@ -12,9 +12,7 @@ var loaderScript = doc.getElementById("seajsnode") || scripts[scripts.length - 1
 该script标签在所有script标签的最后
 ```
 
-3. 
-
-以下是关于代码的解析
+3. 以下是关于代码的解析
 ```javascript
 // 表示非符号?或者#的其他任意字符（有0或者多个），再加上符号/。就构成了验证文件夹（目录）的正则
 var DIRNAME_RE = /[^?#]*\//
