@@ -16,6 +16,7 @@ seajs.use("../static/hello/src/main");
 即我们后面需要对该案例，解析seajs的config，和seajs的use。不过这两个基本已经可以覆盖seajs的大部分功能（尤其解析module.js这个模块）。
 
 1. 第一步骤
+
 其实在我们载入sea-debug.js这个文件以后，它是会去执行sea-debug.js这个文件的代码。
                 
 sea-debug.js这是个自定义执行函数，在内部，会有很多给data的赋值，便于后面的使用，总结如下：
@@ -65,7 +66,9 @@ data.preload = (function() {
 其中的data.base等获取的值，具体见src/util-path.md中代码的解析
 
 2. 第二步骤
+
 执行seajs.config，目的是外部的配置覆盖之前的默认配置，具体代码解析，查看src/config.md。
 
 3. 第三步骤（重点，精华）
+
 seajs.use("../static/hello/src/main");执行的过程，便是module.js需要解决的问题。具体查看src/module.md 的详细讲解。

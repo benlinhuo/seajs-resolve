@@ -3,6 +3,7 @@
 
 ####总结一. 
 关于函数function id2Uri(id, refUri){}在seajs中的应用形式：
+
 1. 直接赋值给seajs.resolve。这样我们就可以直接将一个相对于base的模块id转换成对应的uri（其实就是完整的文件路径）。如id = "../static/hello/src/main",转化后的uri = "file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/static/hello/src/main.js".
 ```javascript
 // For Developers
