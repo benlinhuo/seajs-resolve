@@ -281,13 +281,97 @@ require.async = function(ids, callback) {
 
 对于有多个Module.use的情况，我们可以这么理解：有多个入口文件，它们之间就只是在加载某些公用模块的时候，有些可能已经被加载过了。如果被加载过了，更好，就不用自己再加载一次了。各自完了之后，回到自己最初出发的地方，进行后面操作即可。
 
+####seajs data.base解析
+
+一。当我们设置了seajs.config({base: xxx});的时候（如下：）。则seajs源码中data.base就为以下指定的base内容,data.base = "file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/sea-modules/"（案例是sourcecode中的hello.html,相对于引用的hello.html的路径：file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/app/hello.html）。
+```javascript
+seajs.config({
+    base: "../sea-modules/",
+    alias: {
+      "jquery": "jquery/jquery/1.10.1/jquery.js"
+    }
+  });
+```
 
 
+* 1. 基于以上，我们使用seajs.use("../static/hello/src/main"); id="../static/hello/src/main"，在使用seajs.resolve, 实际上是调用方法id2Uri()。addBase()中id=之前的id,refUri = "file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/app/_use_0"(表示来源)。它会走（//Relative）的代码（ret = realpath((refUri ? dirname(refUri) : data.cwd) + id)）转化后的ret="file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/static/hello/src/main.js"。即转化成了正确的文件目录
+```javascript
+function id2Uri(id, refUri) {
+  if (!id) return ""
+  id = parseAlias(id)
+  id = parsePaths(id)
+  id = parseVars(id)
+  id = normalize(id)
 
+  var uri = addBase(id, refUri)
+  uri = parseMap(uri)
 
+  return uri
+}
 
+var ABSOLUTE_RE = /^\/\/.|:\//
+var ROOT_DIR_RE = /^.*?\/\/.*?\//
 
+function addBase(id, refUri) {
+  var ret
+  var first = id.charAt(0)
+  // Absolute
+  if (ABSOLUTE_RE.test(id)) {
+    ret = id
+  }
+  // Relative
+  else if (first === ".") {
+    ret = realpath((refUri ? dirname(refUri) : data.cwd) + id)
+ }
+  // Root
+  else if (first === "/") {
+    var m = data.cwd.match(ROOT_DIR_RE)
+    ret = m ? m[0] + id.substring(1) : id
+  }
+  // Top-level
+  else {
+    ret = data.base + id
+  }
+  // Add default protocol when uri begins with "//"
+  if (ret.indexOf("//") === 0) {
+    ret = location.protocol + ret
+  }
 
+  return ret
+}
+```
+
+* 2. 当执行main.js的依赖（在执行addBase()时候）时，id="./spinning.js"(require中的字符串，main.js文件中)，refUri = "file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/static/hello/src/main.js"。它执行的仍然是（///Relative）.可以得到正确的ret.返回（ret="file:///Users/benlinhuo/sourcecode/sea-2.3.0/examples/static/hello/src/spinning.js"） 。所以我们在main.js中通过require()去引用时，require这个模块的路径是相对于main.js这个模块的路径的。
+
+二。如果我们config中没有主动设置base路径的话，它会在最开始的时候默认从引入seajs的script标签src中解析。所以如果我们引用<script src="http://192.168.194.69/js/sea-debug.js"></script>。则data.base = "http://192.168.194.69/js/"。
+```javascript
+var DIRNAME_RE = /[^?#]*\//
+
+var DOT_RE = /\/\.\//g
+var DOUBLE_DOT_RE = /\/[^/]+\/\.\.\//
+var MULTI_SLASH_RE = /([^:/])\/+\//g
+
+// Extract the directory portion of a path
+// dirname("a/b/c.js?t=123#xx/zz") ==> "a/b/"
+// ref: http://jsperf.com/regex-vs-split/2
+function dirname(path) {
+  return path.match(DIRNAME_RE)[0]
+}
+
+data.base = loaderDir;
+
+// When `sea.js` is inline, set loaderDir to current working directory
+var loaderDir = dirname(getScriptAbsoluteSrc(loaderScript) || cwd)
+
+function getScriptAbsoluteSrc(node) {
+  return node.hasAttribute ? // non-IE6/7
+      node.src :
+    // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+      node.getAttribute("src", 4)
+}
+// For Developers
+seajs.resolve = id2Uri
+```
 
 
 
