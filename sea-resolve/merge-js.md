@@ -64,3 +64,5 @@ function onRequest() {
 再返回到main-debug的load，因为它的依赖spinning和jquery都已经执行结束，所以它也会去执行onload（没有callback，只有use的匿名模块才有）...
 
 接下来，就会执行最开始的_use_0匿名模块，它有callback。它在执行callback的时候，又会顺序去执行main-debug  spinning jquery的exec。之后就如线下执行一样了。
+
+备注：其实我们可以发现，因为spinning被集成到main-debug中了，所以我们按照spinning的uri查找该文件并不存在，但是我们无需在意，因为它的文件内容在main-debug中，我们只需要把"examples/hello/1.0.0/spinning-debug"作为一个key值就好了。
